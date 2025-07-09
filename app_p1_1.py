@@ -1,11 +1,10 @@
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D # Para gráficos 3D
-import numpy as np # Necesario para operaciones numéricas en los gráficos
-from PIL import Image # Para cargar y mostrar imágenes (logos)
-from io import BytesIO # Para manejar las imágenes descargadas de la URL
-import requests # Para descargar las imágenes de los logos desde Google Drive
+import numpy as np
+from PIL import Image
+from io import BytesIO
+import requests
 
 # --- Paleta de Colores ---
 # Definición de colores en formato RGB (0-1) para Matplotlib
@@ -18,10 +17,9 @@ color_sustrend_1_rgb = (0/255, 155/255, 211/255)   # 009BD3 (Azul claro)
 color_sustrend_2_rgb = (0/255, 140/255, 207/255)   # 008CCF (Azul medio)
 color_sustrend_3_rgb = (0/255, 54/255, 110/255)    # 00366E (Azul oscuro)
 
-# Selección de colores para los gráficos (ajusta a tu gusto)
+# Selección de colores para los gráficos
 # Usaré una combinación de los colores primarios y Sustrend para contraste
 colors_for_charts = [color_primario_1_rgb, color_primario_2_rgb, color_sustrend_1_rgb, color_sustrend_3_rgb]
-
 
 # --- Configuración de la página de Streamlit ---
 st.set_page_config(layout="wide")
@@ -34,8 +32,6 @@ st.markdown("""
 """)
 
 # --- 1. Datos del Proyecto (Línea Base y Proyecciones) ---
-
-# Datos de la ficha técnica
 data = {
     "indicador": [
         "GEI evitados por devoluciones internacionales (tCO₂e/año)",
@@ -90,31 +86,22 @@ precio_pasa = st.sidebar.slider(
 )
 
 # --- 3. Cálculos de Indicadores ---
-# NOTA: Usamos .iloc[-1] para asegurar que tomamos el último valor si hubiera más de uno,
-# aunque en este DataFrame solo hay una fila por indicador. Esto hace el acceso más robusto.
 gei_evitado = (porcentaje_rechazo_evitado / 100) * (volumen_anual_procesado / 20) * df_diagnostico.loc[0, 'gei_contenedor_retornado_tco2e']
 
-# El rango de desperdicio se convierte en una estimación puntual para la proyección
-# Se usa el porcentaje de rechazo evitado del slider para el cálculo del desperdicio evitado
-# Aquí se asume una proporción entre min y max del rango original para el cálculo del min proyectado
 desperdicio_evitado_factor = porcentaje_rechazo_evitado / df_diagnostico.loc[0, 'porcentaje_rechazo_evitado_estimado']
 desperdicio_evitado_min = (df_diagnostico.loc[1, 'rango_perdida_sugaring_min'] / 100) * volumen_anual_procesado * desperdicio_evitado_factor
 desperdicio_evitado_max = (df_diagnostico.loc[1, 'rango_perdida_sugaring_max'] / 100) * volumen_anual_procesado * desperdicio_evitado_factor
 
-# Pérdidas económicas evitadas se basan en el desperdicio máximo evitado proyectado
 perdidas_economicas = desperdicio_evitado_max * precio_pasa
 
-# Otros indicadores (se mantienen fijos para este ejemplo, pero se podrían parametrizar)
 ahorros_energeticos = 10
 empleos_indirectos_min = df_diagnostico.loc[4, 'factor_empleo_tecnico_min']
 empleos_indirectos_max = df_diagnostico.loc[4, 'factor_empleo_tecnico_max']
-# Escalar capacitación según el volumen anual procesado en comparación con el volumen de ejemplo de la ficha
 capacitacion_personas = df_diagnostico.loc[4, 'personas_a_capacitar_por_plantas'] * (volumen_anual_procesado / df_diagnostico.loc[1, 'volumen_produccion_ejemplo_ton_año'])
 
 
 st.header('Resultados Proyectados Anuales:')
 
-# Uso de st.columns para organizar los métricas en una cuadrícula
 col1, col2, col3 = st.columns(3)
 
 with col1:
@@ -127,7 +114,7 @@ with col3:
     st.metric(label="💰 **Pérdidas Económicas Evitadas**", value=f"USD {perdidas_economicas:,.0f}")
     st.caption("Ahorros directos al evitar la pérdida de valor de la pasa.")
 
-col4, col5 = st.columns(2) # Una nueva fila para los siguientes dos indicadores
+col4, col5 = st.columns(2)
 
 with col4:
     st.metric(label="⚡ **Ahorros Energéticos Indirectos**", value=f"{ahorros_energeticos}%")
@@ -136,7 +123,6 @@ with col5:
     st.metric(label="🧑‍🔬 **Nuevos Empleos Indirectos (por planta)**", value=f"Entre {empleos_indirectos_min} y {empleos_indirectos_max} técnicos")
     st.caption("Estimación de personal técnico requerido para la implementación de la tecnología.")
 
-# Capacitación técnica estimada se muestra fuera de columnas para mayor espacio
 st.metric(label="🎓 **Capacitación Técnica Estimada**", value=f"{capacitacion_personas:.0f} personas", help=f"Personas capacitadas, escalado según el volumen anual procesado (ejemplo base: {df_diagnostico.loc[4, 'personas_a_capacitar_por_plantas']} por {df_diagnostico.loc[4, 'plantas_procesadoras_ejemplo']} plantas).")
 
 
@@ -144,12 +130,8 @@ st.markdown("---")
 
 st.header('📊 Análisis Gráfico de Impactos')
 
-# --- Visualización (Gráficos 3D con Matplotlib) ---
-# Se crea una figura más grande para acomodar los gráficos 3D
-fig = plt.figure(figsize=(20, 8), facecolor=color_primario_3_rgb) # Fondo blanco para la figura
-fig.patch.set_facecolor(color_primario_3_rgb) # Asegura que el fondo de la figura sea blanco
-
-# Calculo de valores de línea base para los gráficos (desde los datos de la ficha)
+# --- Visualización (Gráficos 2D con Matplotlib) ---
+# Cálculo de valores de línea base para los gráficos (desde los datos de la ficha)
 gei_base_ejemplo = df_diagnostico.loc[0, 'gei_contenedor_retornado_tco2e'] * \
                    (df_diagnostico.loc[0, 'porcentaje_rechazo_evitado_estimado'] / 100) * \
                    (df_diagnostico.loc[1, 'volumen_produccion_ejemplo_ton_año'] / 20)
@@ -159,72 +141,142 @@ desperdicio_base_ejemplo = df_diagnostico.loc[1, 'rango_perdida_sugaring_max'] /
 
 perdidas_base_ejemplo = desperdicio_base_ejemplo * df_diagnostico.loc[2, 'precio_pasa_ton_usd']
 
+# Creamos una figura con 3 subplots (2D)
+fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(20, 7), facecolor=color_primario_3_rgb)
+fig.patch.set_facecolor(color_primario_3_rgb)
 
-# Subgráfico 1: GEI Evitados (Barra 3D)
-ax1 = fig.add_subplot(1, 3, 1, projection='3d')
-ejes_gei = ['Línea Base', 'Proyección']
-z_pos = np.array([0, 0])
-x_pos = np.arange(len(ejes_gei))
-y_pos = np.zeros(len(ejes_gei))
-dx = dy = 0.4 # Ancho y profundidad de las barras
-dz_gei = np.array([gei_base_ejemplo, gei_evitado]) # Altura de las barras
+# Definición de etiquetas y valores para los gráficos de barras 2D
+labels = ['Línea Base', 'Proyección']
+bar_width = 0.6
+x = np.arange(len(labels))
 
-ax1.bar3d(x_pos, y_pos, z_pos, dx, dy, dz_gei, color=[colors_for_charts[0], colors_for_charts[1]], alpha=0.9)
-ax1.set_xticks(x_pos + dx / 2)
-ax1.set_xticklabels(ejes_gei, rotation=15)
-ax1.set_zlabel('tCO₂e/año', fontsize=10, color=colors_for_charts[0])
+# --- Gráfico 1: GEI Evitados ---
+gei_values = [gei_base_ejemplo, gei_evitado]
+bars1 = ax1.bar(x, gei_values, width=bar_width, color=[colors_for_charts[0], colors_for_charts[1]])
+ax1.set_ylabel('tCO₂e/año', fontsize=12, color=colors_for_charts[3])
 ax1.set_title('Emisiones de GEI Evitadas', fontsize=14, color=colors_for_charts[3])
-ax1.tick_params(axis='x', colors=colors_for_charts[3])
-ax1.tick_params(axis='z', colors=colors_for_charts[0])
-ax1.xaxis.pane.fill = False
-ax1.yaxis.pane.fill = False
-ax1.zaxis.pane.fill = False
-ax1.grid(False)
-ax1.xaxis.line.set_color(colors_for_charts[0])
-ax1.yaxis.line.set_color(colors_for_charts[0])
-ax1.zaxis.line.set_color(colors_for_charts[0])
+ax1.set_xticks(x)
+ax1.set_xticklabels(labels, rotation=15, color=colors_for_charts[0])
+ax1.yaxis.set_tick_params(colors=colors_for_charts[0]) # Color de los números del eje Y
+ax1.spines['top'].set_visible(False)
+ax1.spines['right'].set_visible(False)
+ax1.tick_params(axis='x', length=0) # Elimina los ticks del eje X
+ax1.set_ylim(bottom=0) # Asegura que el eje Y comience en 0 para GEI
+for bar in bars1:
+    yval = bar.get_height()
+    ax1.text(bar.get_x() + bar.get_width()/2, yval + 0.05 * yval, round(yval, 2), ha='center', va='bottom', color=colors_for_charts[0])
 
-# Subgráfico 2: Desperdicio Evitado (Barra 3D)
-ax2 = fig.add_subplot(1, 3, 2, projection='3d')
-ejes_desperdicio = ['Línea Base', 'Proyección']
-dz_desperdicio = np.array([desperdicio_base_ejemplo, desperdicio_evitado_max])
-ax2.bar3d(x_pos, y_pos, z_pos, dx, dy, dz_desperdicio, color=[colors_for_charts[2], colors_for_charts[3]], alpha=0.9)
-ax2.set_xticks(x_pos + dx / 2)
-ax2.set_xticklabels(ejes_desperdicio, rotation=15)
-ax2.set_zlabel('Toneladas/año', fontsize=10, color=colors_for_charts[0])
+
+# --- Gráfico 2: Desperdicio Evitado ---
+desperdicio_values = [desperdicio_base_ejemplo, desperdicio_evitado_max]
+bars2 = ax2.bar(x, desperdicio_values, width=bar_width, color=[colors_for_charts[2], colors_for_charts[3]])
+ax2.set_ylabel('Toneladas/año', fontsize=12, color=colors_for_charts[0])
 ax2.set_title('Reducción del Desperdicio de Alimentos', fontsize=14, color=colors_for_charts[3])
-ax2.tick_params(axis='x', colors=colors_for_charts[3])
-ax2.tick_params(axis='z', colors=colors_for_charts[0])
-ax2.xaxis.pane.fill = False
-ax2.yaxis.pane.fill = False
-ax2.zaxis.pane.fill = False
-ax2.grid(False)
-ax2.xaxis.line.set_color(colors_for_charts[0])
-ax2.yaxis.line.set_color(colors_for_charts[0])
-ax2.zaxis.line.set_color(colors_for_charts[0])
+ax2.set_xticks(x)
+ax2.set_xticklabels(labels, rotation=15, color=colors_for_charts[0])
+ax2.yaxis.set_tick_params(colors=colors_for_charts[0])
+ax2.spines['top'].set_visible(False)
+ax2.spines['right'].set_visible(False)
+ax2.tick_params(axis='x', length=0)
+ax2.set_ylim(bottom=0) # Asegura que el eje Y comience en 0 para Desperdicio
+for bar in bars2:
+    yval = bar.get_height()
+    ax2.text(bar.get_x() + bar.get_width()/2, yval + 0.05 * yval, round(yval, 0), ha='center', va='bottom', color=colors_for_charts[0])
 
-# Subgráfico 3: Pérdidas Económicas Evitadas (Barra 3D)
-ax3 = fig.add_subplot(1, 3, 3, projection='3d')
-ejes_perdidas = ['Línea Base', 'Proyección']
-dz_perdidas = np.array([perdidas_base_ejemplo, perdidas_economicas])
-ax3.bar3d(x_pos, y_pos, z_pos, dx, dy, dz_perdidas, color=[colors_for_charts[0], colors_for_charts[2]], alpha=0.9)
-ax3.set_xticks(x_pos + dx / 2)
-ax3.set_xticklabels(ejes_perdidas, rotation=15)
-ax3.set_zlabel('USD/año', fontsize=10, color=colors_for_charts[0])
+
+# --- Gráfico 3: Pérdidas Económicas Evitadas ---
+perdidas_values = [perdidas_base_ejemplo, perdidas_economicas]
+bars3 = ax3.bar(x, perdidas_values, width=bar_width, color=[colors_for_charts[1], colors_for_charts[0]])
+ax3.set_ylabel('USD/año', fontsize=12, color=colors_for_charts[3])
 ax3.set_title('Pérdidas Económicas Evitadas', fontsize=14, color=colors_for_charts[3])
-ax3.tick_params(axis='x', colors=colors_for_charts[3])
-ax3.tick_params(axis='z', colors=colors_for_charts[0])
-ax3.xaxis.pane.fill = False
-ax3.yaxis.pane.fill = False
-ax3.zaxis.pane.fill = False
-ax3.grid(False)
-ax3.xaxis.line.set_color(colors_for_charts[0])
-ax3.yaxis.line.set_color(colors_for_charts[0])
-ax3.zaxis.line.set_color(colors_for_charts[0])
+ax3.set_xticks(x)
+ax3.set_xticklabels(labels, rotation=15, color=colors_for_charts[0])
+ax3.yaxis.set_tick_params(colors=colors_for_charts[0])
+ax3.spines['top'].set_visible(False)
+ax3.spines['right'].set_visible(False)
+ax3.tick_params(axis='x', length=0)
+ax3.set_ylim(bottom=0) # Asegura que el eje Y comience en 0 para Pérdidas Económicas
+for bar in bars3:
+    yval = bar.get_height()
+    ax3.text(bar.get_x() + bar.get_width()/2, yval + 0.05 * yval, f"{int(yval):,}", ha='center', va='bottom', color=colors_for_charts[0])
 
 
-plt.tight_layout(rect=[0, 0.05, 1, 0.95]) # Ajusta el layout para evitar solapamientos
-st.pyplot(fig) # Muestra la figura de Matplotlib en Streamlit
+plt.tight_layout(rect=[0, 0.05, 1, 0.95]) # Ajusta el layout
+st.pyplot(fig) # Muestra la figura completa de Matplotlib en Streamlit
+
+# --- Funcionalidad de descarga de cada gráfico ---
+st.markdown("---")
+st.subheader("Descargar Gráficos Individualmente")
+
+# Función auxiliar para generar el botón de descarga
+def download_button(fig, filename_prefix, key):
+    buf = BytesIO()
+    fig.savefig(buf, format="png", bbox_inches="tight", dpi=300)
+    st.download_button(
+        label=f"Descargar {filename_prefix}.png",
+        data=buf.getvalue(),
+        file_name=f"{filename_prefix}.png",
+        mime="image/png",
+        key=key
+    )
+
+# Crear figuras individuales para cada gráfico para poder descargarlas
+# Figura 1: GEI Evitados
+fig_gei, ax_gei = plt.subplots(figsize=(8, 6), facecolor=color_primario_3_rgb)
+ax_gei.bar(x, gei_values, width=bar_width, color=[colors_for_charts[0], colors_for_charts[1]])
+ax_gei.set_ylabel('tCO₂e/año', fontsize=12, color=colors_for_charts[3])
+ax_gei.set_title('Emisiones de GEI Evitadas', fontsize=14, color=colors_for_charts[3])
+ax_gei.set_xticks(x)
+ax_gei.set_xticklabels(labels, rotation=15, color=colors_for_charts[0])
+ax_gei.yaxis.set_tick_params(colors=colors_for_charts[0])
+ax_gei.spines['top'].set_visible(False)
+ax_gei.spines['right'].set_visible(False)
+ax_gei.tick_params(axis='x', length=0)
+ax_gei.set_ylim(bottom=0)
+for bar in ax_gei.patches:
+    yval = bar.get_height()
+    ax_gei.text(bar.get_x() + bar.get_width()/2, yval + 0.05 * yval, round(yval, 2), ha='center', va='bottom', color=colors_for_charts[0])
+plt.tight_layout()
+download_button(fig_gei, "GEI_Evitados", "download_gei")
+plt.close(fig_gei) # Importante cerrar la figura para liberar memoria
+
+# Figura 2: Desperdicio Evitado
+fig_desperdicio, ax_desperdicio = plt.subplots(figsize=(8, 6), facecolor=color_primario_3_rgb)
+ax_desperdicio.bar(x, desperdicio_values, width=bar_width, color=[colors_for_charts[2], colors_for_charts[3]])
+ax_desperdicio.set_ylabel('Toneladas/año', fontsize=12, color=colors_for_charts[0])
+ax_desperdicio.set_title('Reducción del Desperdicio de Alimentos', fontsize=14, color=colors_for_charts[3])
+ax_desperdicio.set_xticks(x)
+ax_desperdicio.set_xticklabels(labels, rotation=15, color=colors_for_charts[0])
+ax_desperdicio.yaxis.set_tick_params(colors=colors_for_charts[0])
+ax_desperdicio.spines['top'].set_visible(False)
+ax_desperdicio.spines['right'].set_visible(False)
+ax_desperdicio.tick_params(axis='x', length=0)
+ax_desperdicio.set_ylim(bottom=0)
+for bar in ax_desperdicio.patches:
+    yval = bar.get_height()
+    ax_desperdicio.text(bar.get_x() + bar.get_width()/2, yval + 0.05 * yval, round(yval, 0), ha='center', va='bottom', color=colors_for_charts[0])
+plt.tight_layout()
+download_button(fig_desperdicio, "Desperdicio_Evitado", "download_desperdicio")
+plt.close(fig_desperdicio)
+
+# Figura 3: Pérdidas Económicas Evitadas
+fig_perdidas, ax_perdidas = plt.subplots(figsize=(8, 6), facecolor=color_primario_3_rgb)
+ax_perdidas.bar(x, perdidas_values, width=bar_width, color=[colors_for_charts[1], colors_for_charts[0]])
+ax_perdidas.set_ylabel('USD/año', fontsize=12, color=colors_for_charts[3])
+ax_perdidas.set_title('Pérdidas Económicas Evitadas', fontsize=14, color=colors_for_charts[3])
+ax_perdidas.set_xticks(x)
+ax_perdidas.set_xticklabels(labels, rotation=15, color=colors_for_charts[0])
+ax_perdidas.yaxis.set_tick_params(colors=colors_for_charts[0])
+ax_perdidas.spines['top'].set_visible(False)
+ax_perdidas.spines['right'].set_visible(False)
+ax_perdidas.tick_params(axis='x', length=0)
+ax_perdidas.set_ylim(bottom=0)
+for bar in ax_perdidas.patches:
+    yval = bar.get_height()
+    ax_perdidas.text(bar.get_x() + bar.get_width()/2, yval + 0.05 * yval, f"{int(yval):,}", ha='center', va='bottom', color=colors_for_charts[0])
+plt.tight_layout()
+download_button(fig_perdidas, "Perdidas_Economicas_Evitadas", "download_perdidas")
+plt.close(fig_perdidas)
 
 
 st.markdown("---")
@@ -237,27 +289,22 @@ st.markdown("---")
 st.markdown("<div style='text-align: center;'>Visualizador Creado por el equipo Sustrend SpA en el marco del Proyecto TT GREEN Foods</div>", unsafe_allow_html=True)
 
 # --- Mostrar Logos ---
-# Columnas para centrar los logos
 col_logos_left, col_logos_center, col_logos_right = st.columns([1, 2, 1])
 
 with col_logos_center:
-    # URLs de Google Drive para los logos. Se usa /uc?id= para acceso directo.
     sustrend_logo_url = "https://drive.google.com/uc?id=1vx_znPU2VfdkzeDtl91dlpw_p9mmu4dd"
     ttgreenfoods_logo_url = "https://drive.google.com/uc?id=1uIQZQywjuQJz6Eokkj6dNSpBroJ8tQf8"
 
-    # Intentar descargar y mostrar las imágenes
     try:
         sustrend_response = requests.get(sustrend_logo_url)
-        sustrend_response.raise_for_status() # Lanza un error para códigos de estado HTTP incorrectos
+        sustrend_response.raise_for_status()
         sustrend_image = Image.open(BytesIO(sustrend_response.content))
 
         ttgreenfoods_response = requests.get(ttgreenfoods_logo_url)
         ttgreenfoods_response.raise_for_status()
         ttgreenfoods_image = Image.open(BytesIO(ttgreenfoods_response.content))
 
-        # Mostrar las imágenes en una fila, ajustando el ancho
-        # Se usa una lista de imágenes para mostrar múltiples en una sola llamada st.image
-        st.image([sustrend_image, ttgreenfoods_image], width=100) # Ajusta el ancho según necesites
+        st.image([sustrend_image, ttgreenfoods_image], width=100)
     except requests.exceptions.RequestException as e:
         st.error(f"Error al cargar los logos desde las URLs. Por favor, verifica los enlaces: {e}")
     except Exception as e:
@@ -266,5 +313,5 @@ with col_logos_center:
 st.markdown("<div style='text-align: center; font-size: small; color: gray;'>Viña del Mar, Valparaíso, Chile</div>", unsafe_allow_html=True)
 
 st.sidebar.markdown("---")
-st.sidebar.markdown(f"<div style='text-align: center; font-size: smaller; color: gray;'>Versión del Visualizador: 1.2</div>", unsafe_allow_html=True) # Actualizada la versión
+st.sidebar.markdown(f"<div style='text-align: center; font-size: smaller; color: gray;'>Versión del Visualizador: 1.3</div>", unsafe_allow_html=True)
 st.sidebar.markdown(f"<div style='text-align: center; font-size: x-small; color: lightgray;'>Desarrollado con Streamlit</div>", unsafe_allow_html=True)

@@ -24,7 +24,7 @@ colors_for_charts = [color_primario_1_rgb, color_primario_2_rgb, color_sustrend_
 # --- Configuración de la página de Streamlit ---
 st.set_page_config(layout="wide")
 
-st.title('✨ Visualizador de Impactos - Subproyecto P1.1')
+st.title('✨ Visualizador de Impactos - Proyecto P1.1')
 st.subheader('Reducción del fenómeno de “sugaring” en pasas mediante tratamiento por microondas')
 st.markdown("""
     Ajusta los parámetros para explorar cómo las proyecciones de impacto ambiental y económico del proyecto
@@ -154,14 +154,14 @@ x = np.arange(len(labels))
 gei_values = [gei_base_ejemplo, gei_evitado]
 bars1 = ax1.bar(x, gei_values, width=bar_width, color=[colors_for_charts[0], colors_for_charts[1]])
 ax1.set_ylabel('tCO₂e/año', fontsize=12, color=colors_for_charts[3])
-ax1.set_title('Emisiones de GEI Evitadas', fontsize=14, color=colors_for_charts[3])
+ax1.set_title('Emisiones de GEI Evitadas', fontsize=14, color=colors_for_charts[3], pad=20) # Aumentado pad
 ax1.set_xticks(x)
 ax1.set_xticklabels(labels, rotation=15, color=colors_for_charts[0])
-ax1.yaxis.set_tick_params(colors=colors_for_charts[0]) # Color de los números del eje Y
+ax1.yaxis.set_tick_params(colors=colors_for_charts[0])
 ax1.spines['top'].set_visible(False)
 ax1.spines['right'].set_visible(False)
-ax1.tick_params(axis='x', length=0) # Elimina los ticks del eje X
-ax1.set_ylim(bottom=0) # Asegura que el eje Y comience en 0 para GEI
+ax1.tick_params(axis='x', length=0)
+ax1.set_ylim(bottom=0)
 for bar in bars1:
     yval = bar.get_height()
     ax1.text(bar.get_x() + bar.get_width()/2, yval + 0.05 * yval, round(yval, 2), ha='center', va='bottom', color=colors_for_charts[0])
@@ -171,14 +171,14 @@ for bar in bars1:
 desperdicio_values = [desperdicio_base_ejemplo, desperdicio_evitado_max]
 bars2 = ax2.bar(x, desperdicio_values, width=bar_width, color=[colors_for_charts[2], colors_for_charts[3]])
 ax2.set_ylabel('Toneladas/año', fontsize=12, color=colors_for_charts[0])
-ax2.set_title('Reducción del Desperdicio de Alimentos', fontsize=14, color=colors_for_charts[3])
+ax2.set_title('Reducción del Desperdicio de Alimentos', fontsize=14, color=colors_for_charts[3], pad=20) # Aumentado pad
 ax2.set_xticks(x)
 ax2.set_xticklabels(labels, rotation=15, color=colors_for_charts[0])
 ax2.yaxis.set_tick_params(colors=colors_for_charts[0])
 ax2.spines['top'].set_visible(False)
 ax2.spines['right'].set_visible(False)
 ax2.tick_params(axis='x', length=0)
-ax2.set_ylim(bottom=0) # Asegura que el eje Y comience en 0 para Desperdicio
+ax2.set_ylim(bottom=0)
 for bar in bars2:
     yval = bar.get_height()
     ax2.text(bar.get_x() + bar.get_width()/2, yval + 0.05 * yval, round(yval, 0), ha='center', va='bottom', color=colors_for_charts[0])
@@ -188,21 +188,21 @@ for bar in bars2:
 perdidas_values = [perdidas_base_ejemplo, perdidas_economicas]
 bars3 = ax3.bar(x, perdidas_values, width=bar_width, color=[colors_for_charts[1], colors_for_charts[0]])
 ax3.set_ylabel('USD/año', fontsize=12, color=colors_for_charts[3])
-ax3.set_title('Pérdidas Económicas Evitadas', fontsize=14, color=colors_for_charts[3])
+ax3.set_title('Pérdidas Económicas Evitadas', fontsize=14, color=colors_for_charts[3], pad=20) # Aumentado pad
 ax3.set_xticks(x)
 ax3.set_xticklabels(labels, rotation=15, color=colors_for_charts[0])
 ax3.yaxis.set_tick_params(colors=colors_for_charts[0])
 ax3.spines['top'].set_visible(False)
 ax3.spines['right'].set_visible(False)
 ax3.tick_params(axis='x', length=0)
-ax3.set_ylim(bottom=0) # Asegura que el eje Y comience en 0 para Pérdidas Económicas
+ax3.set_ylim(bottom=0)
 for bar in bars3:
     yval = bar.get_height()
     ax3.text(bar.get_x() + bar.get_width()/2, yval + 0.05 * yval, f"{int(yval):,}", ha='center', va='bottom', color=colors_for_charts[0])
 
 
-plt.tight_layout(rect=[0, 0.05, 1, 0.95]) # Ajusta el layout
-st.pyplot(fig) # Muestra la figura completa de Matplotlib en Streamlit
+plt.tight_layout(rect=[0, 0.05, 1, 0.95])
+st.pyplot(fig)
 
 # --- Funcionalidad de descarga de cada gráfico ---
 st.markdown("---")
@@ -225,7 +225,7 @@ def download_button(fig, filename_prefix, key):
 fig_gei, ax_gei = plt.subplots(figsize=(8, 6), facecolor=color_primario_3_rgb)
 ax_gei.bar(x, gei_values, width=bar_width, color=[colors_for_charts[0], colors_for_charts[1]])
 ax_gei.set_ylabel('tCO₂e/año', fontsize=12, color=colors_for_charts[3])
-ax_gei.set_title('Emisiones de GEI Evitadas', fontsize=14, color=colors_for_charts[3])
+ax_gei.set_title('Emisiones de GEI Evitadas', fontsize=14, color=colors_for_charts[3], pad=20)
 ax_gei.set_xticks(x)
 ax_gei.set_xticklabels(labels, rotation=15, color=colors_for_charts[0])
 ax_gei.yaxis.set_tick_params(colors=colors_for_charts[0])
@@ -238,13 +238,13 @@ for bar in ax_gei.patches:
     ax_gei.text(bar.get_x() + bar.get_width()/2, yval + 0.05 * yval, round(yval, 2), ha='center', va='bottom', color=colors_for_charts[0])
 plt.tight_layout()
 download_button(fig_gei, "GEI_Evitados", "download_gei")
-plt.close(fig_gei) # Importante cerrar la figura para liberar memoria
+plt.close(fig_gei)
 
 # Figura 2: Desperdicio Evitado
 fig_desperdicio, ax_desperdicio = plt.subplots(figsize=(8, 6), facecolor=color_primario_3_rgb)
 ax_desperdicio.bar(x, desperdicio_values, width=bar_width, color=[colors_for_charts[2], colors_for_charts[3]])
 ax_desperdicio.set_ylabel('Toneladas/año', fontsize=12, color=colors_for_charts[0])
-ax_desperdicio.set_title('Reducción del Desperdicio de Alimentos', fontsize=14, color=colors_for_charts[3])
+ax_desperdicio.set_title('Reducción del Desperdicio de Alimentos', fontsize=14, color=colors_for_charts[3], pad=20)
 ax_desperdicio.set_xticks(x)
 ax_desperdicio.set_xticklabels(labels, rotation=15, color=colors_for_charts[0])
 ax_desperdicio.yaxis.set_tick_params(colors=colors_for_charts[0])
@@ -263,7 +263,7 @@ plt.close(fig_desperdicio)
 fig_perdidas, ax_perdidas = plt.subplots(figsize=(8, 6), facecolor=color_primario_3_rgb)
 ax_perdidas.bar(x, perdidas_values, width=bar_width, color=[colors_for_charts[1], colors_for_charts[0]])
 ax_perdidas.set_ylabel('USD/año', fontsize=12, color=colors_for_charts[3])
-ax_perdidas.set_title('Pérdidas Económicas Evitadas', fontsize=14, color=colors_for_charts[3])
+ax_perdidas.set_title('Pérdidas Económicas Evitadas', fontsize=14, color=colors_for_charts[3], pad=20)
 ax_perdidas.set_xticks(x)
 ax_perdidas.set_xticklabels(labels, rotation=15, color=colors_for_charts[0])
 ax_perdidas.yaxis.set_tick_params(colors=colors_for_charts[0])
@@ -287,6 +287,10 @@ st.markdown("- **Estado de Avance del Proyecto:** El proyecto cuenta con validac
 st.markdown("---")
 # Texto de atribución centrado
 st.markdown("<div style='text-align: center;'>Visualizador Creado por el equipo Sustrend SpA en el marco del Proyecto TT GREEN Foods</div>", unsafe_allow_html=True)
+
+# Aumentar el espaciado antes de los logos
+st.markdown("<br>", unsafe_allow_html=True)
+st.markdown("<br>", unsafe_allow_html=True)
 
 # --- Mostrar Logos ---
 col_logos_left, col_logos_center, col_logos_right = st.columns([1, 2, 1])
@@ -313,5 +317,5 @@ with col_logos_center:
 st.markdown("<div style='text-align: center; font-size: small; color: gray;'>Viña del Mar, Valparaíso, Chile</div>", unsafe_allow_html=True)
 
 st.sidebar.markdown("---")
-st.sidebar.markdown(f"<div style='text-align: center; font-size: smaller; color: gray;'>Versión del Visualizador: 1.3</div>", unsafe_allow_html=True)
+st.sidebar.markdown(f"<div style='text-align: center; font-size: smaller; color: gray;'>Versión del Visualizador: 1.4</div>", unsafe_allow_html=True) # Actualizada la versión
 st.sidebar.markdown(f"<div style='text-align: center; font-size: x-small; color: lightgray;'>Desarrollado con Streamlit</div>", unsafe_allow_html=True)

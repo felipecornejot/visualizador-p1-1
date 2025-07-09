@@ -2,5 +2,5 @@ streamlit
 pandas
 matplotlib
 numpy
-Pillow         # Para PIL (Image)
-requests       # Para descargar los logos
+Pillow
+requests
